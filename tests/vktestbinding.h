@@ -22,6 +22,29 @@
 #ifndef VKTESTBINDING_H
 #define VKTESTBINDING_H
 
+#ifndef NOEXCEPT
+ // Check for noexcept support
+#if defined(__clang__)
+#if __has_feature(cxx_noexcept)
+#define HAS_NOEXCEPT
+#endif
+#else
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) && __GNUC__ * 10 + __GNUC_MINOR__ >= 46
+#define HAS_NOEXCEPT
+#else
+#if defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190023026 && defined(_HAS_EXCEPTIONS) && _HAS_EXCEPTIONS
+#define HAS_NOEXCEPT
+#endif
+#endif
+#endif
+
+#ifdef HAS_NOEXCEPT
+#define NOEXCEPT noexcept
+#else
+#define NOEXCEPT
+#endif
+#endif
+
 #include <algorithm>
 #include <assert.h>
 #include <iterator>
@@ -97,8 +120,8 @@ class Handle {
     Handle &operator=(const Handle &) = delete;
 
     // handles can be moved out
-    Handle(Handle &&src) noexcept : handle_{src.handle_} { src.handle_ = {}; }
-    Handle &operator=(Handle &&src) noexcept {
+    Handle(Handle &&src) NOEXCEPT : handle_{src.handle_} { src.handle_ = {}; }
+    Handle &operator=(Handle &&src) NOEXCEPT {
         handle_ = src.handle_;
         src.handle_ = {};
         return *this;
@@ -542,7 +565,7 @@ class Pipeline : public internal::NonDispHandle<VkPipeline> {
 
 class PipelineLayout : public internal::NonDispHandle<VkPipelineLayout> {
    public:
-    PipelineLayout() noexcept : NonDispHandle(){};
+    PipelineLayout() NOEXCEPT : NonDispHandle(){};
     ~PipelineLayout();
 
     PipelineLayout(PipelineLayout &&src) = default;
@@ -566,11 +589,11 @@ class Sampler : public internal::NonDispHandle<VkSampler> {
 
 class DescriptorSetLayout : public internal::NonDispHandle<VkDescriptorSetLayout> {
    public:
-    DescriptorSetLayout() noexcept : NonDispHandle(){};
+    DescriptorSetLayout() NOEXCEPT : NonDispHandle(){};
     ~DescriptorSetLayout();
 
     DescriptorSetLayout(DescriptorSetLayout &&src) = default;
-    DescriptorSetLayout &operator=(DescriptorSetLayout &&src) noexcept {
+    DescriptorSetLayout &operator=(DescriptorSetLayout &&src) NOEXCEPT {
         this->~DescriptorSetLayout();
         this->NonDispHandle::operator=(std::move(src));
         return *this;
